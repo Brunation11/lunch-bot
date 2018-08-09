@@ -80,4 +80,9 @@ module.exports = function(robot) {
     var reply = res.random(leaveMsgs).replace('%user', user);
     res.send(reply);
   });
+
+  robot.respond(/.*(good|nice)/, function(res) {
+    var reply = 'Aww, thank you %user.'.replace('%user', res.message.user.name);
+    res.send(reply);
+  });
 };
