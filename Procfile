@@ -1,1 +1,1 @@
-web: bin/hubot -a slack -n dabot
+web: bin/hubot -a slack -n lunchbot
