@@ -34,6 +34,31 @@ Then you can interact with lunchbot by typing `lunchbot help`.
     lunchbot help - Displays all of the help commands that lunchbot knows about.
     ...
 
+### Slack integration
+Locally:
+
+    HUBOT_SLACK_TOKEN=xoxb-1234-5678-91011-00e4dd ./bin/hubot --adapter slack
+
+Deploy to Heroku:
+- Make sure `Procfile` uses the `slack` adapter:
+
+        web: bin/hubot --adapter slack
+
+- Install [heroku toolbelt](https://toolbelt.heroku.com/) if you haven't already. Add Heroku remote to repo.
+
+- Activate the Hubot service on your ["Team Services"](http://my.slack.com/services/new/hubot) page inside Slack.
+
+- Add the [config variables](#adapter-configuration). For example:
+
+        heroku addons:add redistogo:nano
+        heroku config:add HEROKU_URL=http://my-company-slackbot.herokuapp.com
+        heroku config:add HUBOT_SLACK_TOKEN=xoxb-1234-5678-91011-00e4dd
+
+- Deploy and start the bot:
+
+        git push heroku master
+        heroku ps:scale web=1
+
 ### Configuration
 
 A few scripts (including some installed by default) require environment
