@@ -20,6 +20,7 @@ var cuisineOptions = {
   E: 'Middle Eastern (Turkish, Persian)',
 };
 var cuisineKey; // One of A|B|C|D|E
+var answerListener;
 
 // Helper functions
 var getDay = function() {
@@ -30,7 +31,6 @@ var getDay = function() {
 var askPreferences = function(res, robot) {
   var user = res.message.user.name;
   var question = 'OK %user, what type of cuisine you feel like?'.replace('%user', user);
-
   var options = '';
   Object.keys(cuisineOptions).forEach(function(key) {
     options += key + '. ' + cuisineOptions[key] + '\n';
@@ -39,10 +39,13 @@ var askPreferences = function(res, robot) {
   res.send(question);
   res.send(options);
 
-  robot.hear(/[abcde]/i, function(res) {
-    var confirm = getPreference(res);
-    if (confirm) res.send(confirm);
-  });
+  // This is to prevent the listener from firing multiple times
+  if (!answerListener) {
+    answerListener = robot.hear(/[abcde]/i, function(res) {
+      var confirmMsg = getPreference(res);
+      if (confirmMsg) res.send(confirmMsg);
+    });
+  }
 };
 
 var getPreference = function(res) {
