@@ -15,6 +15,13 @@ var leaveMsgs = [
 var errorMsgs = [
   'Uh oh! Looks like I\'ve gotten all turned around finding suggestions',
 ];
+var foodPuns = [
+  'why did the banana go to the doctor?\nIt wasn\'t *peeling* well!',
+  'what do you call cheese that isn\'t yours?\n*Nacho* cheese!',
+  'What do you call a fake noodle?\nAn *impasta*!',
+  'Why did the tomato blush?\nBecause it saw the salad *dressing*!',
+  'Why don\'t eggs tell jokes? They\'d *crack* each other up!',
+];
 
 var apiBaseUrl = 'https://api.foursquare.com/v2/venues/search?';
 
@@ -26,7 +33,7 @@ var baseParams = {
   ll: '40.7537571,-73.9783438',
   radius: 500,
   intent: 'browse',
-  limit: 5,
+  limit: 10,
 };
 
 var cuisineOptions = {
@@ -75,8 +82,9 @@ var cuisineOptions = {
   }
 };
 var cuisineKey; // One of A|B|C|D|E
-var answerListener;
-var searchResults = [];
+var cuisineListener;
+var selectionListener;
+var searchResults = []; //List of venues
 
 // Helper functions
 var getDay = function() {
@@ -96,13 +104,15 @@ var askPreferences = function(res, robot) {
   res.send(options);
 
   // This is to prevent the listener from firing multiple times
-  if (!answerListener) {
-    answerListener = robot.hear(/[abcde]/i, function(res) {
+  if (!cuisineListener) {
+    cuisineListener = robot.hear(/[abcde]/i, function(res) {
       var confirmMsg = getPreference(res);
       if (confirmMsg) res.send(confirmMsg);
 
+      if (!cuisineKey) return;
+
       var categoryIds = cuisineOptions[cuisineKey].keys;
-      var params = Object.assign({}, baseParams, {categoryId: Object.values(categoryIds).join(',')});
+      var params = Object.assign({}, baseParams, {categoryId: Object.values(categoryIds).join(',')})
 
       getLunchSpots(robot, res, params)
         .then(function() {
@@ -125,13 +135,17 @@ var getPreference = function(res) {
 };
 
 var getSelection = function(robot) {
-  answerListener = robot.hear(/[12345]/i, function(res) {
-    var selection = res.message.text;
-    var selectedVenue = searchResults[selection - 1];
-    // console.warn('GET SELECTION', selectedVenue);
-    res.send('You picked ' + selectedVenue.name + '!');
-    getLunchSpot(robot, res, selectedVenue);
-  });
+  if (!selectionListener) {
+    selectionListener = robot.hear(/\d/i, function(res) {
+      var selection = res.message.text;
+      var selectedVenue = searchResults[selection - 1];
+
+      if (!selectedVenue) return;
+
+      res.send('You picked ' + selectedVenue.name + '!');
+      getLunchSpot(robot, res, selectedVenue);
+    });
+  }
 };
 
 var compileQueryString = function(params) {
@@ -144,32 +158,29 @@ var compileQueryString = function(params) {
 
 var parseVenue = function(res, body) {
   var response = JSON.parse(body).response;
-  var venue = response.venue || {};
-  const data = {
-    'url': venue.url,
-    'address': venue.location.formattedAddress.join(', '),
-    'phone number': venue.contact.formattedPhone,
-    'price range': venue.price.message,
-    'rating': venue.rating,
-  };
+  var venue = response.venue;
 
-  for (key in data) {
-    res.send(key + ': ' + data[key]);
+  if (!venue) {
+    res.send(res.random(errorMsgs));
+    return;
   }
+
+  res.send(venue.location.address);
+  res.send('Price range: ' + venue.price.message + ' | Rating: ' + venue.rating);
+  res.send('*' + cuisineOptions[cuisineKey].confirmMsg + '*');
 }
 
 var parseVenues = function(res, body) {
   var response = JSON.parse(body).response;
   searchResults = response.venues || [];
 
-  res.send('I found ' + searchResults.length + (searchResults.length === 1 ? ' location' : ' locations'));
+  res.send('I found ' + searchResults.length + (searchResults.length === 1 ? ' location:' : ' locations:'));
   searchResults.forEach(function(venue, index) {
     var name = venue.name;
     var location = venue.location.address ? ' at ' + venue.location.address : '';
-    var distance = '(aprox. ' + Math.ceil(venue.location.distance / 100) + ' minute walk)';
-    res.send((index + 1) + '. ' + name + location  + ' | ' + distance);
+    var distance = '(approx. ' + Math.ceil(venue.location.distance / 100) + ' minute walk)';
+    res.send((index + 1) + '. ' + name + location  + ' ' + distance);
   });
-  res.send(cuisineOptions[cuisineKey].confirmMsg);
 }
 
 var getLunchSpot = function(robot, res, selectedVenue) {
@@ -209,7 +220,10 @@ module.exports = function(robot) {
   // Venue queries
   robot.respond(/find( (\w+))/i, function(res) {
     var params = Object.assign({}, baseParams, {query: res.match[2]});
-    getLunchSpots(robot, res, params);
+    getLunchSpots(robot, res, params)
+      .then(function() {
+        getSelection(robot);
+      });
   });
 
   // Greetings and goodbye
@@ -230,5 +244,10 @@ module.exports = function(robot) {
   robot.respond(/.*(good|nice)/, function(res) {
     var reply = 'Aww, thank you %user.'.replace('%user', res.message.user.name);
     res.send(reply);
+  });
+
+  robot.respond(/(pun|pun me)/i, function(res) {
+    var user = res.message.user.name;
+    res.send(user + ' ' + res.random(foodPuns));
   });
 };
