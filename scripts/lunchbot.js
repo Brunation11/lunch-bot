@@ -18,6 +18,7 @@ var errorMsgs = [
 var tuesdayResps = [
   'Today is Chopt day', 'Chopt is on the menu for today', "Today's special is Chopt salad",
 ];
+
 var foodPuns = [
   'why did the banana go to the doctor?\nIt wasn\'t *peeling* well!',
   'what do you call cheese that isn\'t yours?\n*Nacho* cheese!',
@@ -97,7 +98,7 @@ var getDay = function() {
 
 var askPreferences = function(res, robot, day) {
   var user = day === 'Friday' ? 'kevin' : res.message.user.name;
-  var question = 'OK %user, what type of cuisine you feel like?'.replace('%user', user);
+  var question = 'OK %user, what type of cuisine do you feel like?'.replace('%user', user);
   var options = '';
 
   Object.keys(cuisineOptions).forEach(function(key) {
@@ -145,7 +146,7 @@ var getSelection = function(robot) {
 
       if (!selectedVenue) return;
 
-      res.send('You picked ' + selectedVenue.name + '!');
+      res.send('You picked ' + selectedVenue.name + '.');
       getLunchSpot(robot, res, selectedVenue);
     });
   }
@@ -159,10 +160,8 @@ var compileQueryString = function(params) {
   return queryString;
 };
 
-var parseVenue = function(res, body) {
-  var response = JSON.parse(body).response;
+var parseVenue = function(res, response) {
   var venue = response.venue;
-
   if (!venue) {
     res.send(res.random(errorMsgs));
     return;
@@ -199,7 +198,7 @@ var getLunchSpot = function(robot, res, selectedVenue) {
       if (err) {
         res.send(res.random(errorMsgs));
       }
-      parseVenue(res, body);
+      parseVenue(res, JSON.parse(body).response);
     });
 };
 
