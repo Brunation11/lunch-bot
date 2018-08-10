@@ -27,8 +27,8 @@ var foodPuns = [
   'Why don\'t eggs tell jokes? They\'d *crack* each other up!',
 ];
 
+// Foursquare
 var apiBaseUrl = 'https://api.foursquare.com/v2/venues/search?';
-
 var baseParams = {
   client_id: process.env.CLIENT_ID,
   client_secret: process.env.CLIENT_SECRET,
@@ -118,10 +118,9 @@ var askPreferences = function(res, robot, day) {
       var categoryIds = cuisineOptions[cuisineKey].keys;
       var params = Object.assign({}, baseParams, {categoryId: Object.values(categoryIds).join(',')})
 
-      getLunchSpots(robot, res, params)
-        .then(function() {
-          getSelection(robot);
-        });
+      getLunchSpots(robot, res, params).then(function() {
+        getSelection(robot);
+      });
     });
   }
 };
@@ -143,7 +142,6 @@ var getSelection = function(robot) {
     selectionListener = robot.hear(/\d/i, function(res) {
       var selection = res.message.text;
       var selectedVenue = searchResults[selection - 1];
-
       if (!selectedVenue) return;
 
       res.send('You picked ' + selectedVenue.name + '.');
@@ -170,7 +168,7 @@ var parseVenue = function(res, response) {
   res.send(venue.location.address);
   res.send('Price range: ' + venue.price.message + ' | Rating: ' + venue.rating);
   res.send('*' + cuisineOptions[cuisineKey].confirmMsg + '*');
-}
+};
 
 var parseVenues = function(res, response) {
   searchResults = response.venues || [];
@@ -187,10 +185,10 @@ var parseVenues = function(res, response) {
     message += (index + 1) + '. ' + name + location  + ' ' + distance + '\n';
   });
   res.send(message);
-}
+};
 
-var getLunchSpot = function(robot, res, selectedVenue) {
-  var apiDetailsUrl = apiBaseUrl.replace('search?', selectedVenue.id) + '?';
+var getDetailedInfo = function(robot, res, venue) {
+  var apiDetailsUrl = apiBaseUrl.replace('search?', venue.id) + '?';
 
   robot.http(apiDetailsUrl + compileQueryString(baseParams))
     .header('Accept', 'application/json')
