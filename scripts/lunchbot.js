@@ -1,9 +1,9 @@
 // Commands:
 //   lunchbot hi
 //   lunchbot bye
-//   lunchbot What's for lunch today?|I need some lunch options|
-//            Give me some lunch suggestions
-//   lunchbot find
+//   lunchbot What's for lunch today?|I need some lunch options|Give me some lunch suggestions
+//   lunchbot find ramen
+//   lunchbot good job
 
 var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 var greetings = [
@@ -14,6 +14,9 @@ var leaveMsgs = [
 ];
 var errorMsgs = [
   'Uh oh! Looks like I\'ve gotten all turned around finding suggestions',
+];
+var tuesdayResps = [
+  'Today is Chopt day', 'Chopt is on the menu for today', "Today's special is Chopt salad",
 ];
 var foodPuns = [
   'why did the banana go to the doctor?\nIt wasn\'t *peeling* well!',
@@ -84,7 +87,7 @@ var cuisineOptions = {
 var cuisineKey; // One of A|B|C|D|E
 var cuisineListener;
 var selectionListener;
-var searchResults = []; //List of venues
+var searchResults = []; // List of venues
 
 // Helper functions
 var getDay = function() {
@@ -92,14 +95,14 @@ var getDay = function() {
   return days[today.getDay()];
 };
 
-var askPreferences = function(res, robot) {
-  var user = res.message.user.name;
+var askPreferences = function(res, robot, day) {
+  var user = day === 'Friday' ? 'kevin' : res.message.user.name;
   var question = 'OK %user, what type of cuisine you feel like?'.replace('%user', user);
   var options = '';
+
   Object.keys(cuisineOptions).forEach(function(key) {
     options += key + '. ' + cuisineOptions[key].label + '\n';
   });
-
   res.send(question);
   res.send(options);
 
@@ -170,17 +173,21 @@ var parseVenue = function(res, body) {
   res.send('*' + cuisineOptions[cuisineKey].confirmMsg + '*');
 }
 
-var parseVenues = function(res, body) {
-  var response = JSON.parse(body).response;
+var parseVenues = function(res, response) {
   searchResults = response.venues || [];
+  res.send(
+    'I found ' + searchResults.length + ' location' +
+    (searchResults.length > 1 ? 's:' : ':')
+  );
 
-  res.send('I found ' + searchResults.length + (searchResults.length === 1 ? ' location:' : ' locations:'));
+  var message = '';
   searchResults.forEach(function(venue, index) {
     var name = venue.name;
     var location = venue.location.address ? ' at ' + venue.location.address : '';
-    var distance = '(approx. ' + Math.ceil(venue.location.distance / 100) + ' minute walk)';
-    res.send((index + 1) + '. ' + name + location  + ' ' + distance);
+    var distance = '(approx. ' + Math.ceil(venue.location.distance / 100) + '-minute walk)';
+    message += (index + 1) + '. ' + name + location  + ' ' + distance + '\n';
   });
+  res.send(message);
 }
 
 var getLunchSpot = function(robot, res, selectedVenue) {
@@ -205,7 +212,8 @@ var getLunchSpots = function(robot, res, params) {
           res.send(res.random(errorMsgs));
           reject(err);
         }
-        parseVenues(res, body);
+        var resp = JSON.parse(body).response;
+        parseVenues(res, resp);
         resolve();
       });
   });
@@ -214,6 +222,16 @@ var getLunchSpots = function(robot, res, params) {
 module.exports = function(robot) {
   // Check user preferences
   robot.respond(/(.*lunch|.*options)/i, function(res) {
+    var day = getDay();
+
+    if (day === 'Tuesday') {
+      res.send(res.random(tuesdayResps));
+    } else {
+      askPreferences(res, robot, day);
+    }
+  });
+
+  robot.respond(/(.*other|.*more)/i, function(res) {
     askPreferences(res, robot);
   });
 
@@ -241,7 +259,7 @@ module.exports = function(robot) {
     res.send(reply);
   });
 
-  robot.respond(/.*(good|nice)/, function(res) {
+  robot.respond(/.*(good|nice|excellent)/, function(res) {
     var reply = 'Aww, thank you %user.'.replace('%user', res.message.user.name);
     res.send(reply);
   });
