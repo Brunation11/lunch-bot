@@ -18,6 +18,7 @@ var errorMsgs = [
 var tuesdayResps = [
   'Today is Chopt day', 'Chopt is on the menu for today', "Today's special is Chopt salad",
 ];
+
 var foodPuns = [
   'why did the banana go to the doctor?\nIt wasn\'t *peeling* well!',
   'what do you call cheese that isn\'t yours?\n*Nacho* cheese!',
@@ -26,8 +27,8 @@ var foodPuns = [
   'Why don\'t eggs tell jokes? They\'d *crack* each other up!',
 ];
 
+// Foursquare
 var apiBaseUrl = 'https://api.foursquare.com/v2/venues/search?';
-
 var baseParams = {
   client_id: process.env.CLIENT_ID,
   client_secret: process.env.CLIENT_SECRET,
@@ -97,7 +98,7 @@ var getDay = function() {
 
 var askPreferences = function(res, robot, day) {
   var user = day === 'Friday' ? 'kevin' : res.message.user.name;
-  var question = 'OK %user, what type of cuisine you feel like?'.replace('%user', user);
+  var question = 'OK %user, what type of cuisine do you feel like?'.replace('%user', user);
   var options = '';
 
   Object.keys(cuisineOptions).forEach(function(key) {
@@ -117,10 +118,9 @@ var askPreferences = function(res, robot, day) {
       var categoryIds = cuisineOptions[cuisineKey].keys;
       var params = Object.assign({}, baseParams, {categoryId: Object.values(categoryIds).join(',')})
 
-      getLunchSpots(robot, res, params)
-        .then(function() {
-          getSelection(robot);
-        });
+      getLunchSpots(robot, res, params).then(function() {
+        getSelection(robot);
+      });
     });
   }
 };
@@ -142,10 +142,9 @@ var getSelection = function(robot) {
     selectionListener = robot.hear(/\d/i, function(res) {
       var selection = res.message.text;
       var selectedVenue = searchResults[selection - 1];
-
       if (!selectedVenue) return;
 
-      res.send('You picked ' + selectedVenue.name + '!');
+      res.send('You picked ' + selectedVenue.name + '.');
       getLunchSpot(robot, res, selectedVenue);
     });
   }
@@ -159,10 +158,8 @@ var compileQueryString = function(params) {
   return queryString;
 };
 
-var parseVenue = function(res, body) {
-  var response = JSON.parse(body).response;
+var parseVenue = function(res, response) {
   var venue = response.venue;
-
   if (!venue) {
     res.send(res.random(errorMsgs));
     return;
@@ -171,7 +168,7 @@ var parseVenue = function(res, body) {
   res.send(venue.location.address);
   res.send('Price range: ' + venue.price.message + ' | Rating: ' + venue.rating);
   res.send('*' + cuisineOptions[cuisineKey].confirmMsg + '*');
-}
+};
 
 var parseVenues = function(res, response) {
   searchResults = response.venues || [];
@@ -188,10 +185,10 @@ var parseVenues = function(res, response) {
     message += (index + 1) + '. ' + name + location  + ' ' + distance + '\n';
   });
   res.send(message);
-}
+};
 
-var getLunchSpot = function(robot, res, selectedVenue) {
-  var apiDetailsUrl = apiBaseUrl.replace('search?', selectedVenue.id) + '?';
+var getDetailedInfo = function(robot, res, venue) {
+  var apiDetailsUrl = apiBaseUrl.replace('search?', venue.id) + '?';
 
   robot.http(apiDetailsUrl + compileQueryString(baseParams))
     .header('Accept', 'application/json')
@@ -199,7 +196,7 @@ var getLunchSpot = function(robot, res, selectedVenue) {
       if (err) {
         res.send(res.random(errorMsgs));
       }
-      parseVenue(res, body);
+      parseVenue(res, JSON.parse(body).response);
     });
 };
 
