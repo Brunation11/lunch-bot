@@ -145,7 +145,7 @@ var getSelection = function(robot) {
       if (!selectedVenue) return;
 
       res.send('You picked ' + selectedVenue.name + '.');
-      getLunchSpot(robot, res, selectedVenue);
+      getDetailedInfo(robot, res, selectedVenue);
     });
   }
 };
