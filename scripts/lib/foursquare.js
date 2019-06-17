@@ -40,7 +40,11 @@ const getDetailedInfo = (robot, res, venue, cuisineKey) => {
     .header('Accept', 'application/json')
     .get()((err, response, body) => {
       if (err) {
-        res.send(res.random(errorMsgs));
+        if (streetMode) {
+          res.send(res.random(data.errorMsgsStreet));
+        } else {
+          res.send(res.random(data.errorMsgs));
+        }
       }
 
       const venueDetails = getVenueDetails(res, JSON.parse(body).response, cuisineKey);
@@ -56,7 +60,11 @@ const getLunchSpots = (robot, res, params) => {
       .header('Accept', 'application/json')
       .get()((err, response, body) => {
         if (err) {
-          res.send(res.random(errorMsgs));
+          if (streetMode) {
+            res.send(res.random(data.errorMsgsStreet));
+          } else {
+            res.send(res.random(data.errorMsgs));
+          }
           reject(err);
         }
 
@@ -80,7 +88,11 @@ const compileQueryString = (params) => {
 const getVenueDetails = (res, response, cuisineKey) => {
   const venue = response.venue;
   if (!venue) {
-    res.send(res.random(errorMsgs));
+    if (streetMode) {
+      res.send(res.random(data.errorMsgsStreet));
+    } else {
+      res.send(res.random(data.errorMsgs));
+    }
     return;
   }
 

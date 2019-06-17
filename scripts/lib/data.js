@@ -33,12 +33,37 @@ const leaveMsgs = [
   'Have a heavenly day, %user!',
   'Bye %user. Hope to see you soon!',
 ];
+const leaveMsgsStreet = [
+  'b4n',
+  'K thx bai',
+  'L8ers',
+  'Mmkay byee',
+  'Peace out',
+  'Toodles',
+];
 
 const errorMsgs = [
   'Uh oh! Looks like I got turned around finding suggestions',
   `Sorry I'm experiencing some technical difficulties`,
   'Looks like the service is unavailable right now',
 ];
+const errorMsgsStreet = [
+  'Bitch puhlease, give me a break',
+  `Couldn't find anything. Sorry not sorry`,
+  `Dude, you be trippin'`,
+  'Four letters: GTFO',
+  `Foursquare be trippin' right now`,
+  'Fudge. Nothing turned up',
+];
+
+thankMsgs = [
+  'Aww, thank you %user.',
+  'Awesome sauce',
+  'Holy moly guacamole!',
+  'How cheeky you',
+  `%user, you saucy minx!`,
+];
+
 const tuesdayResps = [
   'Chopt is on the menu for today',
   'Chopt is your best bet',
@@ -106,11 +131,14 @@ module.exports = {
   cuisineOptions,
   days,
   errorMsgs,
+  errorMsgsStreet,
   foodPuns,
   greetings,
   greetingsStreet,
   leaveMsgs,
+  leaveMsgsStreet,
   normalModeMsgs,
   streetModeMsgs,
+  thankMsgs,
   tuesdayResps,
 };

@@ -67,15 +67,26 @@ module.exports = function(robot) {
 
   robot.respond(/(goodbye|bye|adios|ta ta)/i, (res) => {
     const user = res.message.user.name;
-    const reply = res.random(data.leaveMsgs).replace('%user', user);
+    let reply;
+    if (streetMode) {
+      reply = res.random(data.leaveMsgsStreet);
+    } else {
+      reply = res.random(data.leaveMsgs).replace('%user', user);
+    }
+
     res.send(reply);
   });
 
-  robot.respond(/.*(good|nice|excellent)/, (res) => {
-    const reply = 'Aww, thank you %user.'.replace('%user', res.message.user.name);
+  robot.respond(/(what's wrong|how are you|you ok).*/i, (res) => {
+    res.send(res.random(data.errorMsgsStreet));
+  });
+
+  robot.respond(/.*(excellent|good|nice|smart|sweet).*/, (res) => {
+    const reply = res.random(thankMsgs).replace('%user', res.message.user.name);
     res.send(reply);
   });
 
+  // Pun
   robot.respond(/(pun|pun me)/i, (res) => {
     var user = res.message.user.name;
     res.send(`${user} ${res.random(data.foodPuns)}`);
