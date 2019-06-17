@@ -5,48 +5,52 @@
 //   lunchbot find ramen
 //   lunchbot good job
 
-const questions = require('./lib/questions');
 const data = require('./lib/data');
+const foursquare = require('./lib/foursquare');
+const interactions = require('./lib/interactions');
 
+const getDay = () => {
+  const today = new Date();
+  return data.days[today.getDay()];
+};
+
+let day = getDay();
 let streetMode = false;
 
 module.exports = function(robot) {
   // Mode settings
-  robot.respond(/enter street mode/i, function(res) {
+  robot.respond(/enter street mode/i, (res) => {
     streetMode = true;
     res.send(res.random(data.streetModeMsgs));
   });
-  robot.respond(/enter normal mode/i, function(res) {
+  robot.respond(/enter normal mode/i, (res) => {
     streetMode = false;
     res.send(res.random(data.normalModeMsgs));
   });
 
   // Check user preferences
-  robot.respond(/(.*lunch|.*food|.*eat)/i, function(res) {
-    var day = getDay();
-
+  robot.respond(/(.*lunch|.*food|.*eat)/i, (res) => {
     if (day === 'Tuesday') {
-      res.send(res.random(tuesdayResps));
+      res.send(res.random(data.tuesdayResps));
     } else {
-      askPreferences(res, robot, day);
+      interactions.askPreferences(res, robot, day);
     }
   });
 
-  robot.respond(/(.*other|.*more|.*else)/i, function(res) {
-    askPreferences(res, robot);
+  robot.respond(/(.*other|.*more|.*else)/i, (res) => {
+    interactions.askPreferences(res, robot);
   });
 
   // Venue queries
-  robot.respond(/find( (\w+))/i, function(res) {
-    var params = Object.assign({}, baseParams, {query: res.match[2]});
-    getLunchSpots(robot, res, params)
-      .then(function() {
-        getSelection(robot);
-      });
+  robot.respond(/find( (\w+))/i, (res) => {
+    const params = {query: res.match[2]};
+    foursquare.getLunchSpots(robot, res, params).then((searchResults) => {
+      interactions.getSelection(robot, searchResults);
+    });
   });
 
   // Greetings and goodbye
-  robot.respond(/(hi|hello|hola|wassup|what's up)/i, function(res) {
+  robot.respond(/(hi|hello|hola|wassup|what's up)/i, (res) => {
     let greeting;
     const user = res.message.user.name;
 
@@ -55,31 +59,25 @@ module.exports = function(robot) {
     } else {
       greeting = res.random(data.greetings)
         .replace('%user', user)
-        .replace('%day', getDay());
+        .replace('%day', day);
     }
 
     res.send(greeting);
   });
 
-  robot.respond(/(goodbye|bye|adios|ta ta)/i, function(res) {
-    var user = res.message.user.name;
-    var reply = res.random(leaveMsgs).replace('%user', user);
+  robot.respond(/(goodbye|bye|adios|ta ta)/i, (res) => {
+    const user = res.message.user.name;
+    const reply = res.random(data.leaveMsgs).replace('%user', user);
     res.send(reply);
   });
 
-  robot.respond(/.*(good|nice|excellent)/, function(res) {
-    var reply = 'Aww, thank you %user.'.replace('%user', res.message.user.name);
+  robot.respond(/.*(good|nice|excellent)/, (res) => {
+    const reply = 'Aww, thank you %user.'.replace('%user', res.message.user.name);
     res.send(reply);
   });
 
-  robot.respond(/(pun|pun me)/i, function(res) {
+  robot.respond(/(pun|pun me)/i, (res) => {
     var user = res.message.user.name;
-    res.send(user + ' ' + res.random(foodPuns));
+    res.send(`${user} ${res.random(data.foodPuns)}`);
   });
-};
-
-// Helper functions
-var getDay = function() {
-  var today = new Date();
-  return data.days[today.getDay()];
 };

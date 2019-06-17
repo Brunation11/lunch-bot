@@ -35,10 +35,16 @@ const leaveMsgs = [
 ];
 
 const errorMsgs = [
-  'Uh oh! Looks like I\'ve gotten all turned around finding suggestions',
+  'Uh oh! Looks like I got turned around finding suggestions',
+  `Sorry I'm experiencing some technical difficulties`,
+  'Looks like the service is unavailable right now',
 ];
 const tuesdayResps = [
-  'Today is Chopt day', 'Chopt is on the menu for today', "Today's special is Chopt salad",
+  'Chopt is on the menu for today',
+  'Chopt is your best bet',
+  'Today is Chopt day',
+  "Today's special is Chopt salad",
+  'Nothing is better for a Tuesday than a Chopt salad',
 ];
 
 const foodPuns = [
@@ -49,7 +55,55 @@ const foodPuns = [
   'Why don\'t eggs tell jokes? They\'d *crack* each other up!',
 ];
 
+const cuisineOptions = {
+  A: {
+    label:'American/Italian',
+    // Foursquare category keys
+    keys: {
+      american: '4bf58dd8d48988d14e941735',
+      italian: '4bf58dd8d48988d110941735',
+    },
+    confirmMsg: 'Magnifico!',
+  },
+  B: {
+    label: 'Asian (Chinese, Japanese, Korean, Vietnamese)',
+    keys: {
+      chinese: '4bf58dd8d48988d145941735',
+      japanese: '4bf58dd8d48988d111941735',
+      korean: '4bf58dd8d48988d113941735',
+      vietnamese: '4bf58dd8d48988d14a941735',
+    },
+    confirmMsg: 'Chuc an ngon mieng!',
+  },
+  C: {
+    label: 'Indian/Pakistani',
+    keys: {
+      indian: '4bf58dd8d48988d10f941735',
+      pakistani: '52e81612bcbc57f1066b79f8',
+    },
+    confirmMsg: 'achchhee bhookh!',
+  },
+  D: {
+    label: 'Latin American (Mexican, Peruvian, Brazilian)',
+    keys: {
+      mexican: '4bf58dd8d48988d1c1941735',
+      peruvian: '4eb1bfa43b7b52c0e1adc2e8',
+      brazilian: '4bf58dd8d48988d16b941735',
+    },
+    confirmMsg: 'Bom proveito!'
+  },
+  E: {
+    label: 'Middle Eastern (Turkish, Persian)',
+    keys: {
+      turkish: '4f04af1f2fb6e1c99f3db0bb',
+      persian: '52e81612bcbc57f1066b79f7',
+    },
+    confirmMsg: 'iyi iştah!',
+  }
+};
+
 module.exports = {
+  cuisineOptions,
   days,
   errorMsgs,
   foodPuns,

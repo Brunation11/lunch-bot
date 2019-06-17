@@ -1,8 +1,10 @@
+const data = require('./data');
+
 // Foursquare config
-var apiBaseUrl = 'https://api.foursquare.com/v2/venues/search?';
-var baseParams = {
-  client_id: process.env.CLIENT_ID,
-  client_secret: process.env.CLIENT_SECRET,
+const apiBaseUrl = 'https://api.foursquare.com/v2/venues/search?';
+const baseParams = {
+  client_id: process.env.FOURSQUARE_CLIENT_ID,
+  client_secret: process.env.FOURSQUARE_CLIENT_SECRET,
   v: '20180808',
   m: 'swarm',
   ll: '40.7537571,-73.9783438',
@@ -11,71 +13,90 @@ var baseParams = {
   limit: 10,
 };
 
-var parseVenues = function(res, response) {
+let searchResults = []; // List of venues
+
+const parseVenues = (res, response) => {
   searchResults = response.venues || [];
   res.send(
-    'I found ' + searchResults.length + ' location' +
-    (searchResults.length > 1 ? 's:' : ':')
+    `I found ${searchResults.length} location${searchResults.length > 1 ? 's' : ''}:`
   );
 
-  var message = '';
-  searchResults.forEach(function(venue, index) {
-    var name = venue.name;
-    var location = venue.location.address ? ' at ' + venue.location.address : '';
-    var minutes = Math.ceil(venue.location.distance / 100);
-    var distance = '(approx. ' + minutes + '-minute walk)';
-    message += (index + 1) + '. ' + name + location  + ' ' + distance + '\n';
+  let message = '';
+  searchResults.forEach((venue, index) => {
+    const name = venue.name;
+    const location = venue.location.address ? ' at ' + venue.location.address : '';
+    const minutes = Math.ceil(venue.location.distance / 100);
+    const distance = `(approx. ${minutes}-minute walk)`;
+    message += `${(index + 1)}. ${name}${location} ${distance}\n`;
   });
+
   res.send(message);
 };
 
-var getDetailedInfo = function(robot, res, venue) {
-  var apiDetailsUrl = apiBaseUrl.replace('search?', venue.id) + '?';
+const getDetailedInfo = (robot, res, venue, cuisineKey) => {
+  const apiDetailsUrl = apiBaseUrl.replace('search?', venue.id) + '?';
 
   robot.http(apiDetailsUrl + compileQueryString(baseParams))
     .header('Accept', 'application/json')
-    .get()(function(err, response, body) {
+    .get()((err, response, body) => {
       if (err) {
         res.send(res.random(errorMsgs));
       }
-      parseVenue(res, JSON.parse(body).response);
+
+      const venueDetails = getVenueDetails(res, JSON.parse(body).response, cuisineKey);
+      venueDetails.forEach((msg) => res.send(msg));
     });
 };
 
-var getLunchSpots = function(robot, res, params) {
-  return new Promise(function(resolve, reject) {
+const getLunchSpots = (robot, res, params) => {
+  params = Object.assign({}, baseParams, params);
+
+  return new Promise((resolve, reject) => {
     robot.http(apiBaseUrl + compileQueryString(params))
       .header('Accept', 'application/json')
-      .get()(function(err, response, body) {
+      .get()((err, response, body) => {
         if (err) {
           res.send(res.random(errorMsgs));
           reject(err);
         }
-        var resp = JSON.parse(body).response;
+
+        const resp = JSON.parse(body).response;
         parseVenues(res, resp);
-        resolve();
+        resolve(searchResults);
       });
   });
 };
 
 /* Helper functions */
-var compileQueryString = function(params) {
-  var queryString = '';
-  for (var field in params) {
-    queryString += field + '=' + params[field] + '&';
+const compileQueryString = (params) => {
+  let queryString = '';
+  for (let field in params) {
+    queryString += `${field}=${params[field]}&`;
   };
+
   return queryString;
 };
 
-var parseVenue = function(res, response) {
-  var venue = response.venue;
+const getVenueDetails = (res, response, cuisineKey) => {
+  const venue = response.venue;
   if (!venue) {
     res.send(res.random(errorMsgs));
     return;
   }
 
-  res.send(venue.location.address);
-  res.send('Price range: ' + venue.price.message + ' | Rating: ' + venue.rating);
-  res.send('*' + cuisineOptions[cuisineKey].confirmMsg + '*');
+  const rating = venue.rating || 'Unavailable';
+  const details = [
+    venue.location.address,
+    `Price range: ${venue.price.message} | Rating: ${rating}`,
+  ];
+  if (cuisineKey) {
+    details.push(`*${data.cuisineOptions[cuisineKey].confirmMsg}*`);
+  }
+
+  return details;
 };
 
+module.exports = {
+  getDetailedInfo,
+  getLunchSpots,
+};
