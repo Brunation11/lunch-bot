@@ -14,7 +14,6 @@ const getDay = () => {
   return data.days[today.getDay()];
 };
 
-let day = getDay();
 let streetMode = false;
 
 module.exports = function(robot) {
@@ -23,13 +22,15 @@ module.exports = function(robot) {
     streetMode = true;
     res.send(res.random(data.streetModeMsgs));
   });
-  robot.respond(/enter normal mode/i, (res) => {
+  robot.respond(/exit street mode/i, (res) => {
     streetMode = false;
     res.send(res.random(data.normalModeMsgs));
   });
 
   // Check user preferences
   robot.respond(/(.*lunch|.*food|.*eat)/i, (res) => {
+    const day = getDay();
+
     if (day === 'Tuesday') {
       res.send(res.random(data.tuesdayResps));
     } else {
@@ -50,8 +51,9 @@ module.exports = function(robot) {
   });
 
   // Greetings and goodbye
-  robot.respond(/(hi|hello|hola|wassup|what's up)/i, (res) => {
+  robot.respond(/(hi|hello|hola|wassup|what's up|good morning|good afternoon|good evening)/i, (res) => {
     let greeting;
+    const day = getDay();
     const user = res.message.user.name;
 
     if (streetMode) {
@@ -81,7 +83,7 @@ module.exports = function(robot) {
     res.send(res.random(data.errorMsgsStreet));
   });
 
-  robot.respond(/.*(excellent|good|nice|smart|sweet).*/, (res) => {
+  robot.respond(/.*(excellent|good bot|nice|smart|sweet).*/, (res) => {
     const reply = res.random(thankMsgs).replace('%user', res.message.user.name);
     res.send(reply);
   });
